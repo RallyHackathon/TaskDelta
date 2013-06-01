@@ -1,9 +1,14 @@
-Task Delta App
+Task Delta (Actuals vs Estimate) App
 =========================
 
 ## Overview
 
-This app filter tasks based on Iteration and provide the Delta between Estimated and Actuals for each task.
+
+A Rally app that shows a view of tasks filtered by Iteration and calculate the Delta between Estimated and Actuals for each task.
+
+This app also allows to export the results in to Excel spreadsheet.
+
+This app uses App SDK 2.0rc1
 
 ## License
 

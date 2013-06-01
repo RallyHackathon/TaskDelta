@@ -111,12 +111,18 @@ Ext.define('CustomApp', {
                             flex: 1,
                             renderer: function (value) {
                                 return value.Name;
+                            }
+                        },"Owner",
+                        { text: "State",
+                            dataIndex: "State",
+                            flex: 0,
+                            renderer: function (value) {
+                                return value;
                             },
                             summaryRenderer: function (value, data) {
                                 return 'Totals';
                             }
                         },
-                        "Owner", "State",
                         { text: "Estimate",
                             dataIndex: "Estimate",
                             flex: 0,
@@ -229,5 +235,5 @@ Ext.define('CustomApp', {
                 Ext.getBody().unmask();
             }, 500);
         }
-    },
+    }
 });
