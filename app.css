@@ -1,3 +1,14 @@
 .app {
-     /* Add app styles here */
+    margin-top: 5px;
+    margin-left: 5px;
+
 }
+
+.grid {
+    padding-top: 10px;
+}
+.x-grid-row-summary {
+    font-weight:bold;
+}
+
+

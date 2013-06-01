@@ -1,6 +1,21 @@
 Ext.define('CustomApp', {
     extend: 'Rally.app.App',
     componentCls: 'app',
+    
+    items: [
+    {
+        xtype: 'container',
+        itemId: 'iterationFilter',
+    },
+    {
+        xtype: 'container',
+        itemId: 'exportBtn',
+    },
+    {
+        xtype: 'container',
+        itemId: 'taskgrid',
+        cls: 'grid'
+    }],
 
     launch: function() {
         //Write app code here
@@ -8,126 +23,175 @@ Ext.define('CustomApp', {
     },
     
     doLayout: function() { 
-
-        
-        var states = Ext.create('Ext.Container', {
-                        scope: this,
-                        items: [{
-                            xtype: 'rallyattributecombobox',
-                            model: 'Defect',
-                            field: 'State',
-                            multiSelect: true,
-                            width: 300,
-                        }]
-                    });
-
-        var priority = Ext.create('Ext.Container', {
-                        scope: this,
-                        items: [{
-                            xtype: 'rallyattributecombobox',
-                            model: 'Defect',
-                            field: 'Priority',
-                            multiSelect: true,
-                            width: 300
-                        }]
-                    });
     
-    
-        var severity = Ext.create('Ext.Container', {
-                        scope: this,
-                        items: [{
-                            xtype: 'rallyattributecombobox',
-                            model: 'Defect',
-                            field: 'Severity',
-                            multiSelect: true,
-                            width: 300
-                        }]
-                    });
-                        
-        var environment = Ext.create('Ext.Container', {
-                        scope: this,
-                        items: [{
-                            xtype: 'rallyattributecombobox',
-                            model: 'Defect',
-                            field: 'Environment',
-                            multiSelect: true,
-                            width: 300
-                        }]
-                    });
-
-       var daysrange = Ext.create('Ext.Container', {
-                        scope: this,
-                        title: 'Date Range',
-                        bodyPadding: 10,
-                        items: [{
-                            xtype: 'numberfield',
-                            anchor: '100%',
-                            name: 'evens',
-                            fieldLabel: 'Date Range',
-                    
-                            // Set step so it skips every other number
-                            step: 1, value: 30,
-                    
-                            // Add change handler to force user-entered numbers to evens
-                            listeners: {
-                                change: function(field, value) {
-                                    value = parseInt(value, 10);
-                                    field.setValue(value);
-                                }
-                            }
-                        }]
-                    });
-
-        var storerange = Ext.create('Ext.data.Store', {
-            fields: ['abbr', 'name'],
-            data : [
-                {"abbr":"days", "name":"Days"},
-                {"abbr":"weeks", "name":"Weeks"},
-                {"abbr":"months", "name":"Months"},
-                {"abbr":"quarters", "name":"Quarters"}
-                ]
+        this.down('#iterationFilter').add({
+            xtype: 'rallyiterationcombobox',
+            itemId: 'iterationComboBox',
+            allowNoEntry: true,
+            listeners: {
+                select: this._onSelect,
+                ready: this._onLoad,
+                scope: this
+            }
         });
-                                 
-        var typerange = Ext.create('Ext.form.ComboBox', {
-                        scope: this,
-                        fieldLabel: 'Chose range',
-                        store: storerange,
-                        queryMode: 'local',
-                        valueField: 'abbr',
-                        value: 'days',
-                        // Template for the dropdown menu.
-                        // Note the use of "x-boundlist-item" class,
-                        // this is required to make the items selectable.
-                        tpl: Ext.create('Ext.XTemplate',
-                            '<tpl for=".">',
-                                '<div class="x-boundlist-item">{name}</div>',
-                            '</tpl>'
-                        ),
-                        // template for the content inside text field
-                        displayTpl: Ext.create('Ext.XTemplate',
-                            '<tpl for=".">',
-                                '{name}',
-                            '</tpl>'
-                        )
-                    });                           
-
-        var loadButton = Ext.create('Ext.Button', {
-                text: 'Load',
-                renderTo: Ext.getBody(),
-                handler: function() {
-                    alert('You clicked the button!');
-                }
-            });
+        
+  
+         this.down('#exportBtn').add({ 
+            xtype: 'rallybutton',
+            text: 'Export to Excel',
+            handler: this._onClick,
+         });
             
 
-        this.add(states);
-        this.add(priority); 
-        this.add(severity);
-        this.add(environment);
-        this.add(daysrange);
-        this.add(typerange);
-        this.add(loadButton);
-             
+    },
+  
+  
+    _onClick: function(){
+
+		if (/*@cc_on!@*/0) { //Exporting to Excel not supported in IE
+            Ext.Msg.alert('Error', 'Exporting to CSV is not supported in Internet Explorer. Please switch to a different browser and try again.');
+        } else if (document.getElementById('taskgrid')) {
+            
+        	Ext.getBody().mask('Exporting Tasks...');
+            
+            setTimeout(function() {
+                var template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>';
+                var base64   = function(s) { return window.btoa(unescape(encodeURIComponent(s))) };
+                var format   = function(s, c) { return s.replace(/{(\w+)}/g, function(m, p) { return c[p]; }) };
+                var table    = document.getElementById('taskgrid');
+
+                var excel_data = '<tr>';
+                Ext.Array.each(table.innerHTML.match(/<span .*?x-column-header-text.*?>.*?<\/span>/gm), function(column_header_span) {
+                    excel_data += (column_header_span.replace(/span/g,'td'));
+                });
+                excel_data += '</tr>';
+                Ext.Array.each(table.innerHTML.match(/<tr class="x-grid-row.*?<\/tr>/gm), function(line) {
+                	excel_data += line.replace(/[^\011\012\015\040-\177]/g, '>>');
+                });
+
+                var ctx = {worksheet: name || 'Worksheet', table: excel_data};
+                window.location.href = 'data:application/vnd.ms-excel;base64,' + base64(format(template, ctx));
+                Ext.getBody().unmask();
+            }, 500);
+        }
+    },
+  
+    _onLoad: function(comboBox) {
+        Rally.data.ModelFactory.getModel({
+            type:'Iteration',
+            success:this._onModelRetrieved,
+            scope: this
+        });
+    },
+
+    _onSelect: function() {
+        var filterConfig = {
+            property:'Iteration',
+            operator: '=',
+            value: this.down('#iterationComboBox').getValue()
+        };
+
+        this.grid.filter(filterConfig, true, true);
+    },
+
+
+    _onModelRetrieved: function(model) {
+        var totalDelta = 0;
+        Rally.data.ModelFactory.getModel({
+            type: 'Task',
+            success: function(model) {
+                this.grid = this.down('#taskgrid').add({
+                    xtype: 'rallygrid',
+                    id: 'taskgrid',
+                    model: model,
+                    enableEditing: false,
+                    features: [{
+                        ftype: 'summary'
+                    }],
+                    
+                    columnCfgs: [
+                        { text: "Task ID",
+                          dataIndex: "FormattedID",
+                          xtype: 'templatecolumn',
+                          flex:1,
+                          tpl: Ext.create('Rally.ui.renderer.template.FormattedIDTemplate') // make the ID a live link
+                        },
+                        
+                        "Name",
+                        { text: "WorkProduct", 
+                          dataIndex: "WorkProduct",
+                          flex: 2,
+                          renderer : function(value) {
+                              return value.Name;
+                          },
+                          summaryRenderer: function(){
+                              return 'Totals:';
+                          }
+                        },"Project",
+                        
+                        { text: "Estimate", 
+                          dataIndex: "Estimate",
+                          flex: 1,
+                          align: 'center',
+                          summaryType: 'sum'
+                        },
+                        
+                        { text: "ToDo", 
+                          dataIndex: "ToDo",
+                          flex: 1,
+                          align: 'center',
+                          summaryType: 'sum'
+                        },
+                        
+                        { text: "Actuals", 
+                          dataIndex: "Actuals",
+                          flex: 1,
+                          align: 'center',
+                          summaryType: 'sum'
+                        },
+                        
+                        { text: "Delta (Actuals - Estimate)",
+                            id: "deltaColumn",
+                            dataIndex: "Delta",
+                            flex: 1,
+                            align: 'center',
+                            summaryType: 'sum',
+                            summaryRenderer: function() {
+                              return totalDelta;
+                            },
+                            renderer: function(value, metadata, record){
+                                    var estimate = parseFloat(record.get('Estimate'));
+                                    var actuals = parseFloat(record.get('Actuals'));
+                                    
+                                    if (isNaN(estimate)) { estimate = 0; }
+                                    if (isNaN(actuals)) { actuals = 0; }
+                                    value = (actuals - estimate);
+                                    
+                                    if (value > 0) {
+                                        metadata.style = 'color:red;font-weight:bold';
+                                    }
+                                    else {
+                                        metadata.style = '';                                    
+                                    }
+                                    totalDelta += value;
+                                    return value;        
+                                }
+                        }],
+                        
+                    storeConfig: {
+                        filters: [
+                            {
+                                property: 'Iteration',
+                                operator: '=',
+                                value: this.down('#iterationComboBox').getValue() 
+                            }
+                        ]
+                    }                    
+                });
+
+            },
+            scope: this
+        });
     }
    
 });
