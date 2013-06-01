@@ -1,4 +1,4 @@
-Random App Name68984
+Task Delta App
 =========================
 
 ## Overview
