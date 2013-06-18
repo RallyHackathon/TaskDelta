@@ -1,4 +1,4 @@
-Ext.define('CustomApp', {
+Ext.define('TaskDeltaApp', {
     extend: 'Rally.app.App',
     componentCls: 'app',
 
